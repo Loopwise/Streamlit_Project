@@ -18,7 +18,7 @@ def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     Returns:
         pd.DataFrame: Filtered dataframe
     """
-    modify = st.checkbox("Add filters")
+    modify = st.sidebar.checkbox("Add filters")
 
     if not modify:
         return df
@@ -36,7 +36,7 @@ def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
         if is_datetime64_any_dtype(df[col]):
             df[col] = df[col].dt.tz_localize(None)
 
-    modification_container = st.container()
+    modification_container = st.sidebar.container()
 
     with modification_container:
         to_filter_columns = st.multiselect("Filter dataframe on", df.columns)
@@ -64,16 +64,27 @@ def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
                 )
                 df = df[df[column].isin(user_cat_input)]
             elif is_numeric_dtype(df[column]):
-                _min = float(df[column].min())
-                _max = float(df[column].max())
-                step = (_max - _min) / 100
-                user_num_input = right.slider(
-                    f"Values for {column}",
-                    min_value=_min,
-                    max_value=_max,
-                    value=(_min, _max),
-                    step=step,
-                )
+                if df[column].dtype == 'int64' or df[column].dtype == 'int32':
+                    _min = int(df[column].min())
+                    _max = int(df[column].max())
+                    user_num_input = right.slider(
+                        f"Values for {column}",
+                        min_value = _min,
+                        max_value = _max,
+                        value = (_min, _max),
+                        step = 1,
+                    )
+                else:
+                    _min = float(df[column].min())
+                    _max = float(df[column].max())
+                    step = (_max - _min) / 10
+                    user_num_input = right.slider(
+                        f"Values for {column}",
+                        min_value=_min,
+                        max_value=_max,
+                        value=(_min, _max),
+                        step=step,
+                    )
                 df = df[df[column].between(*user_num_input)]
             else:
                 user_text_input = right.text_input(
@@ -85,20 +96,29 @@ def filter_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 @st.cache_data
-def get_data(url, sep = ';', encoding='latin-1'):
+def get_data(url: str, sep = ';', encoding='latin-1') -> pd.DataFrame:
     df = pd.read_csv(url, sep = sep, encoding = encoding)
     df = df.dropna(how='all', axis='columns')
     df = df.dropna()
 
-    df = df.drop(columns=['FECHA_CORTE', 'N_SEC', 'UBIGEO', 'PROVINCIA', 'DISTRITO'])
+    df = df.drop(columns=['FECHA_CORTE', 'N_SEC', 'UBIGEO', 'REG_NAT','PROVINCIA', 'DISTRITO', 'POB_URBANA', 'POB_RURAL'])
 
-    df['REG_NAT'] = df['REG_NAT'].astype('category')
     df['DEPARTAMENTO'] = df['DEPARTAMENTO'].astype('category')
 
     df['PERIODO'] = pd.to_datetime(df['PERIODO'], format='%Y')
+    df['PERIODO'] = pd.DatetimeIndex(df['PERIODO']).year
 
-    for col in df.columns:
-        if df[col].dtype == 'float64':
-            df[col] = df[col].astype('int64')
+    df['POB_TOTAL'] = df['POB_TOTAL'].astype('int64')
+
+    return df
+
+def resume_dataframe(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.copy()
+
+    df['GPC_DOM'] *= df['POB_TOTAL']
+
+    df = df.groupby(['DEPARTAMENTO', 'PERIODO']).sum().reset_index()
+
+    df['GPC_DOM'] /= df['POB_TOTAL']
 
     return df
