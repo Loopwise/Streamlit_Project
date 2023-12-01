@@ -1,13 +1,13 @@
 import os
+os.system('cls')
+
 import warnings
+warnings.filterwarnings('ignore')
+
 import streamlit as st
 import pandas as pd
-import numpy as np
-import datetime
 from utilities import *
 
-os.system('cls')
-warnings.filterwarnings('ignore')
 
 st.set_page_config(     
     page_title="Dashboard Programación Avanzada",
@@ -16,9 +16,9 @@ st.set_page_config(
 
 used = st.sidebar.checkbox("Solo mostrar columnas usadas", value=True)
 if used:
-    info = pd.read_excel('data\info_used.xlsx')
+    info = pd.read_excel('data\\info_used.xlsx')
 else:
-    info = pd.read_excel('data\info.xlsx')
+    info = pd.read_excel('data\\info.xlsx')
 
 
 url = 'https://www.datosabiertos.gob.pe/sites/default/files/D.%20Composici%C3%B3n%20Anual%20de%20residuos%20domiciliarios_Distrital_2019_2022.csv'
@@ -48,5 +48,3 @@ st.markdown('''
 st.markdown('- Cantidad de registros: :green[{}]'.format(data.shape[0]))
 
 st.table(info)
-
-print(data.dtypes)
