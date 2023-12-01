@@ -1,10 +1,6 @@
-import os
 import streamlit as st
-import pandas as pd
 from utilities import *
-from Bienvenido import data
-
-os.system('cls')
+from main import data
 
 st.header('Dataset Original/Filtrado', divider=True)
 st.sidebar.header('Dataset Original/Filtrado', divider=True)

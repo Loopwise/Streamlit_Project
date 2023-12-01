@@ -1,6 +1,3 @@
-import os
-os.system('cls')
-
 import warnings
 warnings.filterwarnings('ignore')
 
